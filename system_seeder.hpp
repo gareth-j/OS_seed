@@ -50,13 +50,20 @@ public:
 	template <typename Iter>
 	void generate(Iter begin, Iter end)
 	{	
+
+		// Here can we do end - begin to get the length of the container?
+		// This could be dangerous as what if the container is not contiguous? 
+
 		typename std::iterator_traits<Iter>::value_type rand = *begin;
 
 		size_t rand_size = sizeof(rand);
 
-		for(Iter iter = begin; iter != end; ++iter)
+		// Flag to control the source of entropy and blocking 
+		unsigned int flag = 0;
+
+		for(Iter iter = begin; iter != end; ++iter) 
 		{
-			ssize_t result = getrandom(&rand, rand_size, !GRND_NONBLOCK);
+			ssize_t result = getrandom(&rand, rand_size, flag);
 			
 			if (result == -1 and errno != EINTR) 
 				std::cerr << "Error - unable to get random numbers.\n";
