@@ -17,6 +17,11 @@
 #include <fstream>
 #include <iterator>
 #include <cerrno>
+#include <cstring>
+
+// Some of the code in this file was taken/modified from answers
+// to the Stackoverflow question
+// https://stackoverflow.com/q/45069219/10354589
 
 // Some ugly preprocessor directives to ensure the correct includes
 #if defined(__linux__) || defined(linux) || defined(__linux)
@@ -50,10 +55,6 @@ public:
 	template <typename Iter>
 	void generate(Iter begin, Iter end)
 	{	
-
-		// Here can we do end - begin to get the length of the container?
-		// This could be dangerous as what if the container is not contiguous? 
-
 		typename std::iterator_traits<Iter>::value_type rand = *begin;
 
 		size_t rand_size = sizeof(rand);
@@ -65,8 +66,8 @@ public:
 		{
 			ssize_t result = getrandom(&rand, rand_size, flag);
 			
-			if (result == -1 and errno != EINTR) 
-				std::cerr << "Error - unable to get random numbers.\n";
+			if (result == -1)
+				std::cerr << "Error - unable to get random number\n" << std::strerror(errno) << "\n";
 
 			// As long as we haven't got an error
 			// and the fn has returned bytes
@@ -103,6 +104,8 @@ public:
 
 	// The BSDs and OS X / MacOS should come with arc4random_buf
 	// which allows us to get a cryptographic pseudo-random number
+	// On newer BSDs it will use the ChaCha20 cipher
+	// On older BSDs it will use ARC4 cipher
 	#elif defined(HAVE_BSD_TYPE)
 
 	template <typename Iter>
@@ -119,9 +122,6 @@ public:
 			*iter = rand;
 		}
 	}
-
-	// For a single 32-bit random number
-	unsigned int get_rand() {return arc4random();}
 
 	#elif defined(HAVE_WINDOWS)
 
